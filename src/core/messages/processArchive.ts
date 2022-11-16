@@ -81,9 +81,10 @@ async function processConverstation(dom: HTMLElementParser) {
     .filter(t => t.childNodes[0].childNodes.length == 0)
     .map(t => {
 
-      const text = t.childNodes[1].outerHTML
-        .replace(t.childNodes[1].childNodes[0].outerHTML, '') // Убираем дочерние элементы
-        .replace(t.childNodes[1].element, '') // Убираем открывающийся div
+      const text = !t.childNodes[1].childNodes[0] ? t.childNodes[1].textContent :
+        t.childNodes[1].outerHTML
+          .replace(t.childNodes[1].childNodes[0]?.outerHTML, '') // Убираем дочерние элементы
+          .replace(t.childNodes[1].element, '') // Убираем открывающийся div
 
       return {
         date: convertDate(t.childNodes[0].textContent.replace('Вы, ', '')),
@@ -97,13 +98,12 @@ async function processConverstation(dom: HTMLElementParser) {
     const words = message.text.split(/\s/g)
     const time = Math.round(message.date / TIME_STEP) * TIME_STEP
 
-    const d = Math.random()
     const wordsToSend: IWord[] = words
       .filter(t => t)
       .map(t => ({
         text: t.toLowerCase(),
         date: new Date(time),
-        debug: message.text + ' |' + d
+        debug: message.text
       }))
 
     if (currentSession?.time == time) {
