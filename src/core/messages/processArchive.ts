@@ -132,7 +132,7 @@ async function processArchive(file: File) {
   stop = false
   sendSessionLoop()
 
-  const converstations = [(await readArchive(file))['151148873']]
+  const converstations = await readArchive(file)
 
   for (const key in converstations) {
     if (stop) break;
