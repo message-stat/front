@@ -2,7 +2,7 @@ import { ZipReader, BlobReader, TextWriter, BlobWriter, TextReader, Entry } from
 import axios from 'axios'
 import { FastHTMLParser } from 'fast-html-dom-parser'
 import { ref } from 'vue'
-import { ISendSession, IWord } from '../types'
+import { IMessage, ISendSession, IWord } from '../types'
 import { convertDate, HTMLElementParser, readFile, readZip } from './utils'
 import { textProcess, wordProcessor } from './wordProcessor'
 
@@ -72,6 +72,17 @@ async function readArchive(file: File) {
   return converstations
 }
 
+type Message = {
+  date: number,
+  out: boolean,
+  wordCount: number,
+  charCount: number,
+}
+
+async function processMessages(messages: Message[]) {
+  console.log('processMessages', messages);
+}
+
 async function processConverstation(dom: HTMLElementParser) {
   const messagesText = dom
     .getElementsByClassName('wrap_page_content')[0]
@@ -79,63 +90,72 @@ async function processConverstation(dom: HTMLElementParser) {
     .map(t => t.getElementsByClassName('message')[0])
 
   const messages = messagesText
-    .filter(t => t.childNodes[0].childNodes.length == 0)
     .map(t => {
       const content = t.childNodes[1]
 
       const kludgesElements = content.getElementsByClassName('kludges')
       const kludges = kludgesElements.length > 0 ? kludgesElements[0].outerHTML : '</div>'
 
-      // console.log(content.outerHTML);
+      const isOut = t.childNodes[0].childNodes.length == 0
 
-      const text = textProcess(content.outerHTML
+      const text = !isOut ? '' : textProcess(content.outerHTML
         .replace(kludges, '')
         .replaceAll('<br>', ' ')
         .replace(content.element, '')
       );
 
-
       return {
-        date: convertDate(t.childNodes[0].textContent.replace('Вы, ', '')),
-        text
+        date: convertDate(t.childNodes[0].textContent.split(',')[1]),
+        out: isOut,
+        text,
+        wordCount: 0,
+        charCount: 0
       }
     })
 
 
   let currentSession: ISendSession & { time: number } = null
-  messages.forEach(message => {
-    const words = message.text.split(/\s/g)
-    const time = Math.round(message.date / TIME_STEP) * TIME_STEP
+  messages
+    .filter(t => t.out)
+    .forEach(message => {
+      const words = message.text.split(/\s/g)
+      const time = Math.round(message.date / TIME_STEP) * TIME_STEP
 
-    const wordsToSend: IWord[] = words
-      .map(t => ({
-        text: wordProcessor(t),
-        date: new Date(time),
-        debug: message.text
-      }))
-      .filter(t => t.text)
+      const wordsToSend: IWord[] = words
+        .map(t => ({
+          text: wordProcessor(t),
+          date: new Date(time),
+          debug: message.text
+        }))
+        .filter(t => t.text)
 
-    // console.log(wordsToSend.map(t => t.text));
+      // console.log(wordsToSend.map(t => t.text));
 
 
-    if (currentSession?.time == time) {
-      currentSession.words.push(...wordsToSend)
-    } else {
-      if (currentSession) sendSessions.push(currentSession)
+      if (currentSession?.time == time) {
+        currentSession.words.push(...wordsToSend)
+      } else {
+        if (currentSession) sendSessions.push(currentSession)
 
-      currentSession = {
-        words: wordsToSend,
-        beginTime: new Date(time),
-        time
+        currentSession = {
+          words: wordsToSend,
+          beginTime: new Date(time),
+          time
+        }
       }
-    }
 
-    processedInfo.value.words += wordsToSend.length
-  })
+      processedInfo.value.words += wordsToSend.length
+
+      message.wordCount = wordsToSend.length
+      message.charCount = wordsToSend.reduce((acc, w) => acc + w.text.length, 0)
+    })
+
   if (currentSession) sendSessions.push(currentSession)
 
   processedInfo.value.inboxMessageCount += messages.length
   processedInfo.value.messageCount += messagesText.length
+
+  return messages
 }
 
 async function processArchive(file: File) {
@@ -151,12 +171,16 @@ async function processArchive(file: File) {
 
     const converstation = converstations[key]
 
+    const messages: Message[] = []
+
     for (const file of converstation) {
       if (stop) break;
       const dom = await readFile(file)
-      await processConverstation(dom)
+      const m = await processConverstation(dom)
+      messages.push(...m)
     }
 
+    await processMessages(messages)
     processedInfo.value.conerstationCount++
   }
 
