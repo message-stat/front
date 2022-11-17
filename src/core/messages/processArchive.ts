@@ -4,6 +4,7 @@ import { FastHTMLParser } from 'fast-html-dom-parser'
 import { ref } from 'vue'
 import { ISendSession, IWord } from '../types'
 import { convertDate, HTMLElementParser, readFile, readZip } from './utils'
+import { textProcess, wordProcessor } from './wordProcessor'
 
 const TIME_STEP = 1000 * 60 * 60 * 24
 
@@ -80,11 +81,19 @@ async function processConverstation(dom: HTMLElementParser) {
   const messages = messagesText
     .filter(t => t.childNodes[0].childNodes.length == 0)
     .map(t => {
+      const content = t.childNodes[1]
 
-      const text = !t.childNodes[1].childNodes[0] ? t.childNodes[1].textContent :
-        t.childNodes[1].outerHTML
-          .replace(t.childNodes[1].childNodes[0]?.outerHTML, '') // Убираем дочерние элементы
-          .replace(t.childNodes[1].element, '') // Убираем открывающийся div
+      const kludgesElements = content.getElementsByClassName('kludges')
+      const kludges = kludgesElements.length > 0 ? kludgesElements[0].outerHTML : '</div>'
+
+      // console.log(content.outerHTML);
+
+      const text = textProcess(content.outerHTML
+        .replace(kludges, '')
+        .replaceAll('<br>', ' ')
+        .replace(content.element, '')
+      );
+
 
       return {
         date: convertDate(t.childNodes[0].textContent.replace('Вы, ', '')),
@@ -99,12 +108,15 @@ async function processConverstation(dom: HTMLElementParser) {
     const time = Math.round(message.date / TIME_STEP) * TIME_STEP
 
     const wordsToSend: IWord[] = words
-      .filter(t => t)
       .map(t => ({
-        text: t.toLowerCase(),
+        text: wordProcessor(t),
         date: new Date(time),
         debug: message.text
       }))
+      .filter(t => t.text)
+
+    // console.log(wordsToSend.map(t => t.text));
+
 
     if (currentSession?.time == time) {
       currentSession.words.push(...wordsToSend)

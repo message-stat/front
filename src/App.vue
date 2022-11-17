@@ -81,9 +81,6 @@ watch(() => processor.processedInfo.value.messageCount, (messageCount) => {
   if (lastETAComputed.date + 5000 < Date.now()) {
     const speed = (messageCount - lastETAComputed.count) / (Date.now() - lastETAComputed.date) * 1000
 
-    console.log('speed', speed);
-
-
     lastETAComputed = {
       date: Date.now(),
       count: messageCount,

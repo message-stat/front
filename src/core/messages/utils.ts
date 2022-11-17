@@ -21,7 +21,7 @@ export async function readFile(file: Entry) {
 }
 
 export function convertDate(date: string) {
-  const match = { 'янв': 'jun', 'фев': 'feb', 'мар': 'mar', 'апр': 'apr', 'май': 'may', 'июн': 'jun', 'июл': 'jul', 'авг': 'aug', 'сен': 'sep', 'окт': 'oct', 'ноя': 'nov', 'дек': 'dec', }
+  const match = { 'янв': 'jun', 'фев': 'feb', 'мар': 'mar', 'апр': 'apr', 'май': 'may', 'мая': 'may', 'июн': 'jun', 'июл': 'jul', 'авг': 'aug', 'сен': 'sep', 'окт': 'oct', 'ноя': 'nov', 'дек': 'dec', }
 
   const month = date.split(' ')[1]
 
