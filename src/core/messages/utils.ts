@@ -8,7 +8,9 @@ export type HTMLElementParser = {
   outerHTML: string
   innerHTML: string
   element: string
+  attributes: { name: string, value: string }[]
   getElementsByClassName(string: string): HTMLElementParser[]
+  getElementsByName(string: string): HTMLElementParser[]
 }
 
 export async function readZip(file: File) {
@@ -23,7 +25,7 @@ export async function readFile(file: Entry) {
 export function convertDate(date: string) {
   const match = { 'янв': 'jun', 'фев': 'feb', 'мар': 'mar', 'апр': 'apr', 'май': 'may', 'мая': 'may', 'июн': 'jun', 'июл': 'jul', 'авг': 'aug', 'сен': 'sep', 'окт': 'oct', 'ноя': 'nov', 'дек': 'dec', }
 
-  const month = date.split(' ')[1]
+  const month = date.trim().split(' ')[1]
 
   return Date.parse(
     date

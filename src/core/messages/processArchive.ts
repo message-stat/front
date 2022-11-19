@@ -2,11 +2,16 @@ import { ZipReader, BlobReader, TextWriter, BlobWriter, TextReader, Entry } from
 import axios from 'axios'
 import { FastHTMLParser } from 'fast-html-dom-parser'
 import { ref } from 'vue'
-import { IMessage, ISendSession, IWord } from '../types'
+import { IMessage, ISendMessageSession, ISendSession, ISendWordSession, IWord } from '../types'
 import { convertDate, HTMLElementParser, readFile, readZip } from './utils'
 import { textProcess, wordProcessor } from './wordProcessor'
+import { sha256 } from 'js-sha256'
 
 const TIME_STEP = 1000 * 60 * 60 * 24
+
+function roundToStep(time: number) {
+  return Math.round(time / TIME_STEP) * TIME_STEP
+}
 
 const archiveInfo = ref({
   conerstationCount: 0,
@@ -16,7 +21,7 @@ const archiveInfo = ref({
 const processedInfo = ref({
   conerstationCount: 0,
   messageCount: 0,
-  inboxMessageCount: 0,
+  outboxMessageCount: 0,
   words: 0,
 })
 
@@ -26,7 +31,7 @@ function resetStats() {
   processedInfo.value = {
     conerstationCount: 0,
     messageCount: 0,
-    inboxMessageCount: 0,
+    outboxMessageCount: 0,
     words: 0,
   }
 
@@ -69,7 +74,12 @@ async function readArchive(file: File) {
     messageCount: Object.values(converstations).reduce((acc, c) => acc + c.length, 0) * 50
   }
 
-  return converstations
+
+  const dom = await readFile(files.find(f => f.filename == 'index.html'))
+  const userID = `${JSON.parse(atob(dom.getElementsByName('jd')[0].attributes[1].value)).user_id}`
+
+
+  return { converstations, userID }
 }
 
 type Message = {
@@ -79,8 +89,40 @@ type Message = {
   charCount: number,
 }
 
-async function processMessages(messages: Message[]) {
-  console.log('processMessages', messages);
+async function processMessages(messages: Message[], converstationId: number) {
+
+  const chatId = sha256.hex(`${converstationId}`)
+  const isChat = converstationId < 0
+
+  messages = messages.reverse()
+
+  let lastInboxMessage: Message = null
+  let lastOutboxMessage: Message = null
+
+  let msg: IMessage[] = []
+
+  for (const message of messages) {
+
+    if (message.out) {
+      msg.push({
+        date: new Date(message.date),
+        words: message.wordCount,
+        symbols: message.charCount,
+        timeFromLastSend: lastOutboxMessage ? (message.date - lastOutboxMessage.date) / 1000 : -1,
+        timeFromLastReceive: lastInboxMessage ? (message.date - lastInboxMessage.date) / 1000 : -1,
+      })
+    }
+
+    if (message.out) lastOutboxMessage = message
+    else lastInboxMessage = message
+
+  }
+
+  messagesSendSession.push({
+    messages: msg,
+    chatId,
+    isChat,
+  })
 }
 
 async function processConverstation(dom: HTMLElementParser) {
@@ -114,28 +156,25 @@ async function processConverstation(dom: HTMLElementParser) {
     })
 
 
-  let currentSession: ISendSession & { time: number } = null
-  messages
-    .filter(t => t.out)
+  let currentSession: ISendWordSession & { time: number } = null
+  const outbox = messages.filter(m => m.out)
+  outbox
     .forEach(message => {
-      const words = message.text.split(/\s/g)
-      const time = Math.round(message.date / TIME_STEP) * TIME_STEP
+      const words = message.text.split(/\s/g).filter(t => t)
+      const time = roundToStep(message.date)
 
       const wordsToSend: IWord[] = words
         .map(t => ({
           text: wordProcessor(t),
-          date: new Date(time),
           debug: message.text
         }))
         .filter(t => t.text)
-
-      // console.log(wordsToSend.map(t => t.text));
 
 
       if (currentSession?.time == time) {
         currentSession.words.push(...wordsToSend)
       } else {
-        if (currentSession) sendSessions.push(currentSession)
+        if (currentSession) wordSendSessions.push(currentSession)
 
         currentSession = {
           words: wordsToSend,
@@ -146,13 +185,13 @@ async function processConverstation(dom: HTMLElementParser) {
 
       processedInfo.value.words += wordsToSend.length
 
-      message.wordCount = wordsToSend.length
-      message.charCount = wordsToSend.reduce((acc, w) => acc + w.text.length, 0)
+      message.wordCount = words.length
+      message.charCount = words.reduce((acc, w) => acc + w.length, 0)
     })
 
-  if (currentSession) sendSessions.push(currentSession)
+  if (currentSession) wordSendSessions.push(currentSession)
 
-  processedInfo.value.inboxMessageCount += messages.length
+  processedInfo.value.outboxMessageCount += outbox.length
   processedInfo.value.messageCount += messagesText.length
 
   return messages
@@ -164,12 +203,18 @@ async function processArchive(file: File) {
   stop = false
   sendSessionLoop()
 
-  const converstations = await readArchive(file)
+  const { converstations, userID } = await readArchive(file)
+  hashedUserId = sha256.hex(userID)
+
+  const lastSend = await axios.get(`${import.meta.env.VITE_API_URL}/lastSend/${hashedUserId}`)
+  console.log(lastSend.data);
+
+  // return;
 
   for (const key in converstations) {
     if (stop) break;
 
-    const converstation = converstations[key]
+    const converstation = converstations[key].sort((a, b) => a.filename.localeCompare(b.filename, undefined, { numeric: true }))
 
     const messages: Message[] = []
 
@@ -180,33 +225,42 @@ async function processArchive(file: File) {
       messages.push(...m)
     }
 
-    await processMessages(messages)
+    await processMessages(messages, +key)
     processedInfo.value.conerstationCount++
   }
 
   processing = false
 }
 
-let sendSessions: ISendSession[] = []
+let wordSendSessions: ISendWordSession[] = []
+let messagesSendSession: ISendMessageSession[] = []
+let hashedUserId: string = null
 
 async function sendSessionLoop() {
-  while (sendSessions.length || processing) {
-    if (sendSessions.length == 0) {
+  while (wordSendSessions.length || messagesSendSession.length || processing) {
+    if (wordSendSessions.length == 0 && messagesSendSession.length == 0) {
       await new Promise(r => setTimeout(r, 200))
       continue
     }
 
-    const temp = sendSessions
+    const tempWord = wordSendSessions
+    const tempMessage = messagesSendSession
     try {
-      sendSessions = []
+      wordSendSessions = []
+      messagesSendSession = []
 
-      await axios.post(import.meta.env.VITE_SEND_URL, temp.map(t => ({
-        words: t.words,
-        beginTime: t.beginTime
-      })))
+      const data: ISendSession = {
+        userId: hashedUserId,
+        words: tempWord.map(t => ({ words: t.words, beginTime: t.beginTime })),
+        messages: tempMessage.map(t => ({ messages: t.messages, chatId: t.chatId, isChat: t.isChat }))
+      }
+
+      await axios.post(import.meta.env.VITE_API_URL + '/send', data)
 
     } catch (e) {
-      sendSessions.push(...temp)
+      wordSendSessions.push(...tempWord)
+      messagesSendSession.push(...tempMessage)
+
       console.error(e)
     }
   }

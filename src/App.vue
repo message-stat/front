@@ -13,7 +13,7 @@
     <div>
       <p>Обработано диалогов: {{ processor.processedInfo.value.conerstationCount }}</p>
       <p>Обработано сообщений: {{ processor.processedInfo.value.messageCount }}</p>
-      <p>Обработано исходящих сообщений: {{ processor.processedInfo.value.inboxMessageCount }}</p>
+      <p>Обработано исходящих сообщений: {{ processor.processedInfo.value.outboxMessageCount }}</p>
       <p>Обработано исходящих слов: {{ processor.processedInfo.value.words }}</p>
       <p v-if="spentTime > 0">Времени затрачено: {{ spentTime }}</p>
       <p>Времени осталось: {{ displayEta }}</p>
