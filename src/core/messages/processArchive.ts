@@ -89,9 +89,8 @@ type Message = {
   charCount: number,
 }
 
-async function processMessages(messages: Message[], converstationId: number) {
+async function processMessages(messages: Message[], converstationId: number, chatHash: string, minDate: number) {
 
-  const chatId = sha256.hex(`${converstationId}`)
   const isChat = converstationId < 0
 
   messages = messages.reverse()
@@ -103,7 +102,7 @@ async function processMessages(messages: Message[], converstationId: number) {
 
   for (const message of messages) {
 
-    if (message.out) {
+    if (message.out && message.date > minDate) {
       msg.push({
         date: new Date(message.date),
         words: message.wordCount,
@@ -118,14 +117,16 @@ async function processMessages(messages: Message[], converstationId: number) {
 
   }
 
-  messagesSendSession.push({
-    messages: msg,
-    chatId,
-    isChat,
-  })
+  if (msg.length > 0) {
+    messagesSendSession.push({
+      messages: msg,
+      chatId: chatHash,
+      isChat,
+    })
+  }
 }
 
-async function processConverstation(dom: HTMLElementParser) {
+async function processConverstation(dom: HTMLElementParser, minDate: number) {
   const messagesText = dom
     .getElementsByClassName('wrap_page_content')[0]
     .getElementsByClassName('item')
@@ -159,8 +160,10 @@ async function processConverstation(dom: HTMLElementParser) {
   let currentSession: ISendWordSession & { time: number } = null
   const outbox = messages.filter(m => m.out)
   outbox
+    .filter(m => m.date > minDate)
     .forEach(message => {
       const words = message.text.split(/\s/g).filter(t => t)
+
       const time = roundToStep(message.date)
 
       const wordsToSend: IWord[] = words
@@ -206,13 +209,18 @@ async function processArchive(file: File) {
   const { converstations, userID } = await readArchive(file)
   hashedUserId = sha256.hex(userID)
 
-  const lastSend = await axios.get(`${import.meta.env.VITE_API_URL}/lastSend/${hashedUserId}`)
-  console.log(lastSend.data);
+  const lastSend = (await axios.get(`${import.meta.env.VITE_API_URL}/lastSend/${hashedUserId}`)).data
 
-  // return;
 
   for (const key in converstations) {
     if (stop) break;
+
+    const chatHash = sha256.hex(`${+key}`)
+    let lastDate = 0
+
+    if (lastSend[chatHash]) {
+      lastDate = (new Date(`${lastSend[chatHash]}Z+3`)).getTime()
+    }
 
     const converstation = converstations[key].sort((a, b) => a.filename.localeCompare(b.filename, undefined, { numeric: true }))
 
@@ -221,11 +229,11 @@ async function processArchive(file: File) {
     for (const file of converstation) {
       if (stop) break;
       const dom = await readFile(file)
-      const m = await processConverstation(dom)
+      const m = await processConverstation(dom, lastDate)
       messages.push(...m)
     }
 
-    await processMessages(messages, +key)
+    await processMessages(messages, +key, chatHash, lastDate)
     processedInfo.value.conerstationCount++
   }
 
@@ -254,6 +262,8 @@ async function sendSessionLoop() {
         words: tempWord.map(t => ({ words: t.words, beginTime: t.beginTime })),
         messages: tempMessage.map(t => ({ messages: t.messages, chatId: t.chatId, isChat: t.isChat }))
       }
+
+      console.log('SEND', data);
 
       await axios.post(import.meta.env.VITE_API_URL + '/send', data)
 
