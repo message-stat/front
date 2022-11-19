@@ -263,8 +263,6 @@ async function sendSessionLoop() {
         messages: tempMessage.map(t => ({ messages: t.messages, chatId: t.chatId, isChat: t.isChat }))
       }
 
-      console.log('SEND', data);
-
       await axios.post(import.meta.env.VITE_API_URL + '/send', data)
 
     } catch (e) {
