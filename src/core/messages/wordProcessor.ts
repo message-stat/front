@@ -25,7 +25,7 @@ export function messageLength(length: number) {
 }
 export function wordPosition(index: number, length: number) {
   if (index == 0) return WordPosition.first
-  if (index + 1 == length) return WordPosition.last
+  if (index == length - 1) return WordPosition.last
 
   if (index <= length * 0.33) return WordPosition.begin
   if (index >= length * 0.66) return WordPosition.end

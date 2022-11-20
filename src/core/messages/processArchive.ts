@@ -171,7 +171,6 @@ async function processConverstation(dom: HTMLElementParser, minDate: number) {
           text: wordProcessor(t),
           length: 0,
           position: 0,
-          debug: message.text
         }))
         .filter(t => t.text)
 
