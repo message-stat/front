@@ -1,6 +1,11 @@
+export enum MessageLength { single = 0, short = 1, medium = 2, long = 3, }
+export enum WordPosition { first = 0, begin = 1, center = 2, end = 3, last = 4 }
+
 export interface IWord {
   text: string
   debug: string
+  length: MessageLength
+  position: WordPosition
 }
 
 export interface ISendWordSession {

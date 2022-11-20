@@ -4,7 +4,7 @@ import { FastHTMLParser } from 'fast-html-dom-parser'
 import { ref } from 'vue'
 import { IMessage, ISendMessageSession, ISendSession, ISendWordSession, IWord } from '../types'
 import { convertDate, HTMLElementParser, readFile, readZip } from './utils'
-import { textProcess, wordProcessor } from './wordProcessor'
+import { messageLength, textProcess, wordPosition, wordProcessor } from './wordProcessor'
 import { sha256 } from 'js-sha256'
 
 const TIME_STEP = 1000 * 60 * 60 * 24
@@ -169,10 +169,18 @@ async function processConverstation(dom: HTMLElementParser, minDate: number) {
       const wordsToSend: IWord[] = words
         .map(t => ({
           text: wordProcessor(t),
+          length: 0,
+          position: 0,
           debug: message.text
         }))
         .filter(t => t.text)
 
+
+      const length = messageLength(wordsToSend.length)
+      wordsToSend.forEach((t, i) => {
+        t.length = length
+        t.position = wordPosition(i, wordsToSend.length)
+      })
 
       if (currentSession?.time == time) {
         currentSession.words.push(...wordsToSend)

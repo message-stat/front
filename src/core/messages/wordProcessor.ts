@@ -1,3 +1,4 @@
+import { MessageLength, WordPosition } from "../types"
 
 export function textProcess(text: string) {
 
@@ -13,4 +14,21 @@ export function textProcess(text: string) {
 
 export function wordProcessor(word: string) {
   return word.toLowerCase()
+}
+
+
+export function messageLength(length: number) {
+  if (length == 1) return MessageLength.single
+  if (length <= 5) return MessageLength.short
+  if (length <= 15) return MessageLength.medium
+  return MessageLength.long
+}
+export function wordPosition(index: number, length: number) {
+  if (index == 0) return WordPosition.first
+  if (index + 1 == length) return WordPosition.last
+
+  if (index <= length * 0.33) return WordPosition.begin
+  if (index >= length * 0.66) return WordPosition.end
+
+  return WordPosition.center
 }
