@@ -266,7 +266,7 @@ async function sendSessionLoop() {
 
       const data: ISendSession = {
         userId: hashedUserId,
-        words: tempWord.map(t => ({ words: t.words, beginTime: t.beginTime })),
+        words: tempWord.map(t => ({ words: t.words.sort((a, b) => a.text.localeCompare(b.text)), beginTime: t.beginTime })),
         messages: tempMessage.map(t => ({ messages: t.messages, chatId: t.chatId, isChat: t.isChat }))
       }
 
