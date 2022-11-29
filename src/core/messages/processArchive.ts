@@ -6,6 +6,12 @@ import { IMessage, ISendMessageSession, ISendSession, ISendWordSession, IWord } 
 import { convertDate, HTMLElementParser, readFile, readZip } from './utils'
 import { messageLength, textProcess, wordPosition, wordProcessor } from './wordProcessor'
 import { sha256 } from 'js-sha256'
+export enum ProcessStatus {
+  notStarted,
+  processing,
+  stopped,
+  finished,
+}
 
 const TIME_STEP = 1000 * 60 * 60 * 24
 
@@ -26,6 +32,7 @@ const processedInfo = ref({
 })
 
 const sending = ref(false)
+const processStatus = ref(ProcessStatus.notStarted)
 
 function resetStats() {
   processedInfo.value = {
@@ -39,8 +46,6 @@ function resetStats() {
     conerstationCount: 0,
     messageCount: 0,
   }
-
-  sending.value = true
 }
 
 let processing = false
@@ -52,7 +57,8 @@ export function useProcessor() {
     stop: () => stop = true,
     archiveInfo,
     processedInfo,
-    sending
+    sending,
+    processStatus
   }
 }
 
@@ -211,6 +217,7 @@ async function processArchive(file: File) {
   resetStats()
   processing = true
   stop = false
+  processStatus.value = ProcessStatus.processing
   sendSessionLoop()
 
   const { converstations, userID } = await readArchive(file)
@@ -252,7 +259,8 @@ let messagesSendSession: ISendMessageSession[] = []
 let hashedUserId: string = null
 
 async function sendSessionLoop() {
-  while (wordSendSessions.length || messagesSendSession.length || processing) {
+  sending.value = true
+  while (!stop && (wordSendSessions.length || messagesSendSession.length || processing)) {
     if (wordSendSessions.length == 0 && messagesSendSession.length == 0) {
       await new Promise(r => setTimeout(r, 200))
       continue
@@ -281,4 +289,5 @@ async function sendSessionLoop() {
   }
 
   sending.value = false
+  processStatus.value = stop ? ProcessStatus.stopped : ProcessStatus.finished
 }

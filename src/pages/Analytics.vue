@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="card">
 
     <VuePlotly :data="data" :layout="layout" :display-mode-bar="false" @plotly-relayout="onZoom"></VuePlotly>
 
