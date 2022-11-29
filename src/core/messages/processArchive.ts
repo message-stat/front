@@ -46,6 +46,8 @@ function resetStats() {
     conerstationCount: 0,
     messageCount: 0,
   }
+
+  processStatus.value = ProcessStatus.notStarted
 }
 
 let processing = false
@@ -55,6 +57,7 @@ export function useProcessor() {
   return {
     processArchive,
     stop: () => stop = true,
+    reset: () => resetStats(),
     archiveInfo,
     processedInfo,
     sending,

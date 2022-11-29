@@ -4,7 +4,7 @@
       <div class="relative">
         <div class="left flex">
           <li class="navbar-item">
-            <RouterLink to="/">Выгрузка</RouterLink>
+            <RouterLink to="/">{{ loadTitle }}</RouterLink>
           </li>
           <li class="navbar-item">
             <RouterLink to="/analytics">Аналитика</RouterLink>
@@ -26,7 +26,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from '@vue/reactivity';
+import { useProcessor, ProcessStatus } from './core/messages/processArchive';
 
+
+const processor = useProcessor()
+
+const loadTitle = computed(() => {
+  if (processor.processStatus.value != ProcessStatus.processing) return 'Выгрузка'
+  const progress = Math.round(processor.processedInfo.value.messageCount / processor.archiveInfo.value.messageCount * 100)
+  if (progress < 100 && progress > 0) return `Выгрузка (${progress}%)`
+  return 'Выгрузка'
+})
 </script>
 
 <style scoped lang="scss">

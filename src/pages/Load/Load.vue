@@ -27,7 +27,8 @@
           }}</p>
           <p>Времени осталось: {{ Math.floor(etaCalculator.eta.value / 1000) }}</p>
 
-          <button @click="onStop">STOP</button>
+          <button @click="onStop" v-if="processor.processStatus.value == ProcessStatus.processing">STOP</button>
+          <button @click="onReset" v-else>Новая выгрузка</button>
         </div>
       </div>
     </div>
@@ -72,6 +73,11 @@ watch(progressValue, val => {
 
 function onStop() {
   processor.stop()
+  etaCalculator.stop()
+}
+
+function onReset() {
+  processor.reset()
 }
 </script>
 
