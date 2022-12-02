@@ -1,5 +1,6 @@
 import { BlobReader, Entry, TextWriter, ZipReader } from "@zip.js/zip.js";
 import { FastHTMLParser } from 'fast-html-dom-parser'
+import { Buffer } from 'buffer';
 
 
 export type HTMLElementParser = {
@@ -32,4 +33,10 @@ export function convertDate(date: string) {
       .replace(' в ', ' ')
       .replace(month, match[month])
   )
+}
+
+export async function userIdByArchive(file: File) {
+  const files = await readZip(file)
+  const dom = await readFile(files.find(f => f.filename == 'index.html'))
+  return `${JSON.parse(Buffer.from(dom.getElementsByName('jd')[0].attributes[1].value, 'base64').toString()).user_id}`
 }

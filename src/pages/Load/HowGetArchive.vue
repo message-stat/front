@@ -16,17 +16,9 @@
 </template>
 
 <style scoped lang="scss">
-h1 {
-  margin-bottom: 10px;
-}
-
 ol {
   list-style-type: decimal;
   margin-top: 0;
   padding-left: 30px;
-}
-
-a {
-  color: #3b5998;
 }
 </style>

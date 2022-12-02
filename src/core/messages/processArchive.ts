@@ -85,7 +85,7 @@ async function readArchive(file: File) {
 
 
   const dom = await readFile(files.find(f => f.filename == 'index.html'))
-  const userID = `${JSON.parse(atob(dom.getElementsByName('jd')[0].attributes[1].value)).user_id}`
+  const userID = `${JSON.parse(Buffer.from(dom.getElementsByName('jd')[0].attributes[1].value, 'base64').toString()).user_id}`
 
 
   return { converstations, userID }

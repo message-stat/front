@@ -12,7 +12,8 @@
         </div>
         <div class="right flex">
           <li class="navbar-item">
-            <RouterLink to="/login">Войти</RouterLink>
+            <div v-if="userId">id{{ userId }} <a @click="onLogout">(Выйти)</a></div>
+            <a v-else @click="onLogin">Войти</a>
           </li>
         </div>
 
@@ -22,13 +23,18 @@
     <div class="content">
       <router-view></router-view>
     </div>
+
+
+    <LoginCard v-model:show="showLogin" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from '@vue/reactivity';
+import { computed, ref } from '@vue/reactivity';
 import { useProcessor, ProcessStatus } from './core/messages/processArchive';
-
+import { userId } from './storage/user';
+import LoginCard from './components/LoginCard.vue';
+import { RouterLink, RouterView } from 'vue-router';
 
 const processor = useProcessor()
 
@@ -38,6 +44,17 @@ const loadTitle = computed(() => {
   if (progress < 100 && progress > 0) return `Выгрузка (${progress}%)`
   return 'Выгрузка'
 })
+
+const showLogin = ref(false)
+
+function onLogin() {
+  showLogin.value = true
+}
+
+function onLogout() {
+  userId.value = ''
+}
+
 </script>
 
 <style scoped lang="scss">
@@ -71,6 +88,7 @@ const loadTitle = computed(() => {
     margin: 15px;
 
     a {
+      cursor: pointer;
       width: 800;
       color: #213547;
       text-decoration: none;
@@ -93,44 +111,5 @@ const loadTitle = computed(() => {
 </style>
 
 <style lang="scss">
-body {
-  background-color: #edeef0;
-  margin: 0;
-  padding: 0;
-  font-family: "Inter var experimental", "Inter var", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Helvetica, Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  color: #213547;
-}
-
-.flex {
-  display: flex;
-}
-
-.relative {
-  position: relative;
-}
-
-.card {
-  background-color: white;
-  border-radius: 10px;
-  margin: 10px;
-  padding: 10px;
-
-
-  &.error {
-    background-color: #f8d7da;
-    color: #721c24;
-  }
-
-  &.warning {
-    background-color: #fff3cd;
-    color: #856404;
-  }
-}
-
-h1,
-h3,
-h4,
-p {
-  margin: 0px;
-}
+@import './styles/main.scss';
 </style>
