@@ -20,14 +20,20 @@ const links = [{
   title: 'Общие',
   to: '/analytics'
 }, {
+  title: 'Отслеживание слова',
+  to: '/analytics/word-traking'
+}, {
   title: 'Слова',
   to: '/analytics/words'
 }, {
   title: 'Словарный запас',
-  to: '/analytics/words-count'
+  to: '/analytics/vocabulary'
 }, {
   title: 'Сообщения',
   to: '/analytics/messages'
+}, {
+  title: 'Собеседники',
+  to: '/analytics/chats'
 }]
 
 const route = useRoute()
@@ -45,6 +51,7 @@ const route = useRoute()
     min-width: 190px;
     position: relative;
     margin: 10px;
+    min-height: 500px;
 
     .sidebar-content {
       position: sticky;
