@@ -4,10 +4,11 @@
       <div class="relative">
         <div class="left flex">
           <li class="navbar-item">
-            <RouterLink to="/">{{ loadTitle }}</RouterLink>
+            <RouterLink to="/" :class="route.path == '/' ? 'active' : ''">{{ loadTitle }}</RouterLink>
           </li>
           <li class="navbar-item">
-            <RouterLink to="/analytics">Аналитика</RouterLink>
+            <RouterLink to="/analytics" :class="route.path.includes('/analytics') ? 'active' : ''">Аналитика
+            </RouterLink>
           </li>
         </div>
         <div class="right flex">
@@ -21,7 +22,9 @@
     </ul>
 
     <div class="content">
-      <router-view></router-view>
+      <AppLayout>
+        <router-view></router-view>
+      </AppLayout>
     </div>
 
 
@@ -34,7 +37,8 @@ import { computed, ref } from '@vue/reactivity';
 import { useProcessor, ProcessStatus } from './core/messages/processArchive';
 import { userId } from './storage/user';
 import LoginCard from './components/LoginCard.vue';
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterLink, RouterView, useRoute } from 'vue-router';
+import AppLayout from './components/AppLayout.vue';
 
 const processor = useProcessor()
 
@@ -55,6 +59,7 @@ function onLogout() {
   userId.value = ''
 }
 
+const route = useRoute()
 </script>
 
 <style scoped lang="scss">
@@ -95,7 +100,7 @@ function onLogout() {
       transition: color 0.5s;
       font-size: 16px;
 
-      &.router-link-active,
+      &.active,
       &:hover {
         color: rgb(71, 37, 209);
       }
@@ -104,9 +109,7 @@ function onLogout() {
 }
 
 .content {
-  margin: auto;
-  margin-top: 60px;
-  max-width: 900px;
+  margin-top: 50px;
 }
 </style>
 

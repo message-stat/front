@@ -9,8 +9,23 @@ const routes = [
   },
   {
     path: '/analytics',
-    name: 'Home',
-    component: AnalyticsVue
+    component: () => import('../pages/Analytics.vue'),
+    meta: { layout: 'AnalyticsLayout' }
+  },
+  {
+    path: '/analytics/words',
+    component: () => import('../pages/Analytics.vue'),
+    meta: { layout: 'AnalyticsLayout' }
+  },
+  {
+    path: '/analytics/words-count',
+    component: () => import('../pages/Analytics.vue'),
+    meta: { layout: 'AnalyticsLayout' }
+  },
+  {
+    path: '/analytics/messages',
+    component: () => import('../pages/Analytics.vue'),
+    meta: { layout: 'AnalyticsLayout' }
   },
 ]
 

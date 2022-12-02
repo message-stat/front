@@ -1,9 +1,27 @@
 <template>
-  <div class="card">
+  <div>
 
-    <VuePlotly :data="data" :layout="layout" :display-mode-bar="false" @plotly-relayout="onZoom"></VuePlotly>
+    <div class="card">
+      <VuePlotly class="chart" :data="data" :layout="layout" :display-mode-bar="false" @plotly-relayout="onZoom">
+      </VuePlotly>
+    </div>
 
+    <div class="card">
+      <VuePlotly class="chart" :data="data" :layout="layout" :display-mode-bar="false" @plotly-relayout="onZoom">
+      </VuePlotly>
+    </div>
+
+    <div class="card">
+      <VuePlotly class="chart" :data="data" :layout="layout" :display-mode-bar="false" @plotly-relayout="onZoom">
+      </VuePlotly>
+    </div>
+
+    <div class="card">
+      <VuePlotly class="chart" :data="data" :layout="layout" :display-mode-bar="false" @plotly-relayout="onZoom">
+      </VuePlotly>
+    </div>
   </div>
+
 </template>
 
 
@@ -23320,8 +23338,8 @@ const x = raw.split('\n').map(line => Date.parse(line.split(',')[0]))
 const y = raw.split('\n').map(line => Number.parseInt(line.split(',')[1]))
 
 const data = ref<Data[]>([{
-  x: x,
-  y: y,
+  x: x.slice(0, 10),
+  y: y.slice(0, 10),
   type: "scatter",
   mode: "lines",
 }])
@@ -23329,7 +23347,8 @@ const data = ref<Data[]>([{
 
 const layout = ref<Partial<Layout>>({
   title: "A Fancy Plot",
-  height: 900,
+  height: 500,
+  margin: { t: 0, b: 0, l: 0, r: 0 },
   xaxis: {
     autorange: true,
     // range: ['1948-02-17', '2020-02-16'],
@@ -23353,7 +23372,7 @@ const layout = ref<Partial<Layout>>({
     },
     rangeslider: {
       range: ['1948-02-17', '2017-02-16'],
-      thickness: 0.05
+      thickness: 0.1
     },
     type: 'date'
   },
@@ -23367,3 +23386,14 @@ const layout = ref<Partial<Layout>>({
 
 
 </script>
+
+
+<style scoped lang="scss">
+.card {
+  padding: 10px;
+
+  .chart {
+    margin: 10px;
+  }
+}
+</style>
