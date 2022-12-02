@@ -6,6 +6,9 @@ import { IMessage, ISendMessageSession, ISendSession, ISendWordSession, IWord } 
 import { convertDate, HTMLElementParser, readFile, readZip } from './utils'
 import { messageLength, textProcess, wordPosition, wordProcessor } from './wordProcessor'
 import { sha256 } from 'js-sha256'
+import { Buffer } from 'buffer';
+
+
 export enum ProcessStatus {
   notStarted,
   processing,
