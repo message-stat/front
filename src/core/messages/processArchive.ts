@@ -3,7 +3,7 @@ import axios from 'axios'
 import { FastHTMLParser } from 'fast-html-dom-parser'
 import { ref } from 'vue'
 import { IMessage, ISendMessageSession, ISendSession, ISendWordSession, IWord } from '../types'
-import { convertDate, HTMLElementParser, readFile, readZip } from './utils'
+import { convertDate, HTMLElementParser, readFile, readZip, rechankSendMessageSession, rechankSendWordSession } from './utils'
 import { messageLength, textProcess, wordPosition, wordProcessor } from './wordProcessor'
 import { sha256 } from 'js-sha256'
 import { Buffer } from 'buffer';
@@ -130,11 +130,11 @@ async function processMessages(messages: Message[], converstationId: number, cha
   }
 
   if (msg.length > 0) {
-    messagesSendSession.push({
+    messagesSendSession.push(...rechankSendMessageSession({
       messages: msg,
       chatId: chatHash,
       isChat,
-    })
+    }))
   }
 }
 
@@ -170,6 +170,12 @@ async function processConverstation(dom: HTMLElementParser, minDate: number) {
 
 
   let currentSession: ISendWordSession & { time: number } = null
+  const pushCurrentSession = () => {
+    if (currentSession) {
+      currentSession.words = currentSession.words.sort((a, b) => a.text.localeCompare(b.text))
+      wordSendSessions.push(...rechankSendWordSession(currentSession))
+    }
+  }
   const outbox = messages.filter(m => m.out)
   outbox
     .filter(m => m.date > minDate)
@@ -196,7 +202,7 @@ async function processConverstation(dom: HTMLElementParser, minDate: number) {
       if (currentSession?.time == time) {
         currentSession.words.push(...wordsToSend)
       } else {
-        if (currentSession) wordSendSessions.push(currentSession)
+        pushCurrentSession()
 
         currentSession = {
           words: wordsToSend,
@@ -211,7 +217,7 @@ async function processConverstation(dom: HTMLElementParser, minDate: number) {
       message.charCount = words.reduce((acc, w) => acc + w.length, 0)
     })
 
-  if (currentSession) wordSendSessions.push(currentSession)
+  pushCurrentSession()
 
   processedInfo.value.outboxMessageCount += outbox.length
   processedInfo.value.messageCount += messagesText.length
@@ -272,19 +278,29 @@ async function sendSessionLoop() {
       continue
     }
 
-    const tempWord = wordSendSessions
-    const tempMessage = messagesSendSession
+    const wordChankSize = 2000
+    const messageChankSize = 100
+    const tempWord = wordSendSessions.slice(0, wordChankSize)
+    const tempMessage = messagesSendSession.slice(0, messageChankSize)
     try {
-      wordSendSessions = []
-      messagesSendSession = []
+      wordSendSessions = wordSendSessions.slice(wordChankSize)
+      messagesSendSession = messagesSendSession.slice(messageChankSize)
+
+      const sendWordChank = tempWord
 
       const data: ISendSession = {
         userId: hashedUserId,
-        words: tempWord.map(t => ({ words: t.words.sort((a, b) => a.text.localeCompare(b.text)), beginTime: t.beginTime })),
+        words: sendWordChank.map(t => ({ words: t.words, beginTime: t.beginTime })),
         messages: tempMessage.map(t => ({ messages: t.messages, chatId: t.chatId, isChat: t.isChat }))
       }
 
-      await axios.post(import.meta.env.VITE_API_URL + '/send', data)
+      await Promise.all([
+        new Promise(r => setTimeout(r, 200)),
+        axios.post(import.meta.env.VITE_API_URL + '/send', data)
+      ])
+
+      console.log(wordSendSessions.length, messagesSendSession.length);
+
 
     } catch (e) {
       wordSendSessions.push(...tempWord)

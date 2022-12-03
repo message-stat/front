@@ -26,7 +26,9 @@
         <p v-if="etaCalculator.timeSpent.value > 0">Времени затрачено: {{ Math.floor(etaCalculator.timeSpent.value /
             1000)
         }}</p>
-        <p>Времени осталось: {{ Math.floor(etaCalculator.eta.value / 1000) }}</p>
+        <p v-if="processor.processStatus.value == ProcessStatus.processing">Времени осталось: {{
+            Math.floor(etaCalculator.eta.value / 1000)
+        }}</p>
 
         <hr>
         <button @click="onStop" class="btn"
@@ -57,7 +59,11 @@ async function process(file: File) {
   processor.processArchive(file)
 }
 
-const progressValue = computed(() => processor.processedInfo.value.messageCount == 0 ? 0 : processor.processedInfo.value.messageCount / processor.archiveInfo.value.messageCount)
+const progressValue = computed(() => {
+  if (processor.processedInfo.value.messageCount == 0) return 0
+  if (processor.processStatus.value == ProcessStatus.finished) return 1
+  return processor.processedInfo.value.messageCount / processor.archiveInfo.value.messageCount
+})
 
 watch(progressValue, val => etaCalculator.updateProgress(val))
 const progressBarColor = computed(() => {
