@@ -5,4 +5,4 @@ import { computed } from "vue";
 
 export const userId = useStorage('userId', null, localStorage);
 
-export const userIdHash = computed(() => sha256.hex(userId.value));
+export const userIdHash = computed(() => userId.value ? sha256.hex(userId.value) : null);
