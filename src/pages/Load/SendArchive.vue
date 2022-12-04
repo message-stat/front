@@ -50,7 +50,6 @@ import ProgressBar from '../../components/ProgressBar.vue';
 import FileInput from '../../components/FileInput.vue';
 
 
-
 const processor = useProcessor()
 const etaCalculator = useETACalculator()
 
@@ -73,8 +72,8 @@ const progressBarColor = computed(() => {
   if (processor.processStatus.value == ProcessStatus.finished) return '#34c759'
 })
 
-watch(processor.processStatus, val => {
-  if (val == ProcessStatus.finished) {
+watchEffect(() => {
+  if (processor.processStatus.value == ProcessStatus.finished) {
     etaCalculator.stop()
   }
 })
