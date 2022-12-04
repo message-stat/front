@@ -13,30 +13,17 @@
 </template>
 
 
-<script setup lang="ts">import { useRoute } from 'vue-router';
-
-
-const links = [{
-  title: 'Общие',
-  to: '/analytics'
-}, {
-  title: 'Отслеживание слова',
-  to: '/analytics/word-traking'
-}, {
-  title: 'Слова',
-  to: '/analytics/words'
-}, {
-  title: 'Словарный запас',
-  to: '/analytics/vocabulary'
-}, {
-  title: 'Сообщения',
-  to: '/analytics/messages'
-}, {
-  title: 'Собеседники',
-  to: '/analytics/chats'
-}]
+<script setup lang="ts">
+import { useRoute, useRouter } from 'vue-router';
 
 const route = useRoute()
+const router = useRouter()
+
+const links = router.getRoutes()
+  .filter(route => route.meta?.layout === 'AnalyticsLayout' && route.meta?.layoutTitle)
+  .sort((a, b) => (a.meta.layoutTitleOrder as number ?? 0) - (b.meta.layoutTitleOrder as number ?? 0))
+  .map(route => ({ to: route.path, title: route.meta.layoutTitle }))
+
 </script>
 
 
