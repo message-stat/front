@@ -24,8 +24,9 @@ export async function readFile(file: Entry) {
   return new FastHTMLParser(content) as HTMLElementParser
 }
 
-export function convertDate(date: string) {
-  const match = { 'янв': 'jun', 'фев': 'feb', 'мар': 'mar', 'апр': 'apr', 'май': 'may', 'мая': 'may', 'июн': 'jun', 'июл': 'jul', 'авг': 'aug', 'сен': 'sep', 'окт': 'oct', 'ноя': 'nov', 'дек': 'dec', }
+
+export function convertDate(date) {
+  const match = { 'янв': 'jan', 'фев': 'feb', 'мар': 'mar', 'апр': 'apr', 'май': 'may', 'мая': 'may', 'июн': 'jun', 'июл': 'jul', 'авг': 'aug', 'сен': 'sep', 'окт': 'oct', 'ноя': 'nov', 'дек': 'dec', }
 
   const month = date.trim().split(' ')[1]
 

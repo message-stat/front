@@ -105,7 +105,7 @@ async function processMessages(messages: Message[], converstationId: number, cha
 
   const isChat = converstationId < 0
 
-  messages = messages.reverse()
+  messages = messages.reverse().sort((a, b) => a.date - b.date)
 
   let lastInboxMessage: Message = null
   let lastOutboxMessage: Message = null
