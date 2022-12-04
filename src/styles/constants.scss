@@ -1,0 +1,12 @@
+:root {
+  --server-color: #007aff;
+  --user-color: #ff2d55;
+}
+
+.userColor {
+  color: var(--user-color);
+}
+
+.serverColor {
+  color: var(--server-color);
+}
