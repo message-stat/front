@@ -8,7 +8,7 @@ const routes = [
   },
   {
     path: '/analytics',
-    component: () => import('../pages/Analytics/General.vue'),
+    component: () => import('../pages/Analytics/General/General.vue'),
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Общие', layoutTitleOrder: 10 }
   },
   {

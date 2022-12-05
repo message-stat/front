@@ -22,7 +22,7 @@
         <p class="userColor bigNumber">{{ format(serverStats.user.totalMessages) }}</p>
         </p>
       </div>
-      <p v-else class="serverColor bigNumber">{{ format(serverStats.server.totalWords) }}</p>
+      <p v-else class="serverColor bigNumber">{{ format(serverStats.server.totalMessages) }}</p>
     </Card>
     <Card :loading="loading">
       <h2 slot="title">Количество пользователей</h2>
@@ -32,6 +32,8 @@
       <h2 slot="title">Размер базы данных</h2>
       <p class="serverColor bigNumber">{{ format(Math.round(serverStats.server.totalSize)) }} мб</p>
     </Card>
+
+    <WordCountCard />
   </div>
 
 </template>
@@ -40,10 +42,13 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { ref, watchEffect } from 'vue';
-import Card from '../../components/Card.vue';
-import { userIdHash, userId } from '../../storage/user';
+import Card from '../../../components/Card.vue';
+import { userIdHash, userId } from '../../../storage/user';
+import WordCountCard from './WordCountCard.vue';
 
 const loading = ref(true);
+
+
 
 
 type ServerStats = {
