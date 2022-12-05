@@ -83,7 +83,7 @@ const links = router.getRoutes()
     }
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 800px) {
     flex-direction: column;
 
     .sidebar {
