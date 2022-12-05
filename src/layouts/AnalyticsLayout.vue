@@ -32,7 +32,7 @@ const links = router.getRoutes()
   display: flex;
   flex-direction: row;
   justify-content: center;
-  // gap: 10px;
+
 
   .sidebar {
     min-width: 190px;
@@ -80,6 +80,14 @@ const links = router.getRoutes()
     @media (max-width: 1300px) {
       margin-right: 0;
       max-width: 100%;
+    }
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+
+    .sidebar {
+      min-height: unset;
     }
   }
 }

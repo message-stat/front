@@ -5,6 +5,7 @@
 
 <script setup lang="ts">
 import VuePlotly from '@/components/VuePlotly.vue'
+import { computed } from '@vue/reactivity';
 import axios from 'axios';
 import { Data, Layout } from 'plotly.js';
 import { onMounted, ref, watchEffect } from 'vue';
@@ -13,6 +14,12 @@ import { userIdHash } from '../storage/user';
 
 const props = defineProps<{
   url: string;
+  type: 'bar' | 'line';
+}>()
+
+const emit = defineEmits<{
+  (event: 'update:loading', value: boolean): void,
+  (event: 'update:elapsed', value: number): void,
 }>()
 
 const layout = ref<Partial<Layout>>({
@@ -38,7 +45,22 @@ function onZoom(e) {
   console.log(e);
 }
 
+const chartType = computed(() => {
+  if (props.type === 'bar') {
+    return 'bar'
+  }
+  return 'scatter'
+})
+
 watchEffect(async () => {
+  load()
+})
+
+
+async function load() {
+
+  emit('update:loading', true)
+
   const res = await axios.get(`${import.meta.env.VITE_API_URL}${props.url}`, { params: { userId: userIdHash.value } })
   const { server, user } = res.data
   console.log(res);
@@ -46,10 +68,10 @@ watchEffect(async () => {
   data.value = [{
     x: server.data.map(t => t.x),
     y: server.data.map(t => t.y),
-    type: 'bar',
+    type: chartType.value,
     line: { color: serverColor, shape: 'spline' },
     marker: { color: serverColor },
-    name: 'Сервер',
+    name: 'Общий',
 
   }]
 
@@ -57,14 +79,17 @@ watchEffect(async () => {
     data.value.push({
       x: user.data.map(t => t.x),
       y: user.data.map(t => t.y),
-      type: 'bar',
+      type: chartType.value,
       line: { color: userColor, shape: 'spline' },
       marker: { color: userColor },
       name: 'Вы',
     })
   }
 
-})
+
+  emit('update:elapsed', res.data.elapsed)
+  emit('update:loading', false)
+}
 
 </script>
 

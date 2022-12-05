@@ -3,7 +3,7 @@
     <Card :loading="loading" :elapsed="serverStats.elapsed">
       <h2>Общее количество слов</h2>
       <div v-if="userId" class="col2grid">
-        <p class="serverColor title">сервер
+        <p class="serverColor title">общий
         <p class="serverColor bigNumber">{{ format(serverStats.server.totalWords) }}</p>
         </p>
         <p class="userColor title">вы
@@ -15,7 +15,7 @@
     <Card :loading="loading">
       <h2 slot="title">Общее количество сообщений</h2>
       <div v-if="userId" class="col2grid">
-        <p class="serverColor title">сервер
+        <p class="serverColor title">общий
         <p class="serverColor bigNumber">{{ format(serverStats.server.totalMessages) }}</p>
         </p>
         <p class="userColor title">вы

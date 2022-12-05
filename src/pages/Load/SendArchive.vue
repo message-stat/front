@@ -4,7 +4,7 @@
     <div v-if="processor.processStatus.value == ProcessStatus.notStarted">
       <FileInput class="file" action-text="Для начала выгрузки" @input="process" />
       <p>
-        <i>Повторная выгрузка архива обрабатывает все сообщения, но отправляет на сервер только новые</i>
+        <i>Повторная выгрузка архива обрабатывает все сообщения, но отправляет на общий только новые</i>
       </p>
     </div>
 
