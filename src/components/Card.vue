@@ -50,7 +50,6 @@ const prop = defineProps({
 
   .horizontal-bar-wrap {
     height: 2px;
-    width: 100%;
     display: block;
     position: absolute;
     top: 0;
