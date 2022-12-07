@@ -21,7 +21,7 @@
 import { onMounted, ref, shallowRef, watchEffect } from 'vue';
 import Card from '../../../components/Card.vue';
 import * as d3 from "d3";
-import * as cloud from 'd3-cloud';
+import Cloud from 'd3-cloud';
 import { useDebounceFn, useElementSize } from '@vueuse/core';
 import axios from 'axios';
 import { userIdHash } from '../../../storage/user';
@@ -34,7 +34,7 @@ const variant = ref<'server' | 'user'>('server');
 
 const wordsResult = shallowRef()
 
-var layout = cloud()
+var layout = Cloud()
   .size([500, 500])
   .words([])
   .padding(0.5)
@@ -50,7 +50,7 @@ var layout = cloud()
   });
 
 
-function draw(words) {
+function draw(words: any[]) {
   d3.select(".cloud-container > svg")
     .attr("width", layout.size()[0])
     .attr("height", layout.size()[1])
@@ -80,7 +80,7 @@ const { width } = useElementSize(container)
 const onResize = useDebounceFn((w) => {
   layout.size([w, 600])
   layout.start();
-}, 500)
+}, 100)
 
 watchEffect(() => onResize(width.value))
 

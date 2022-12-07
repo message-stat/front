@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 8081 --host",
-    "build": "vue-tsc && vite build",
     "build-release": "vite build --mode release",
     "preview": "vite preview"
   },
@@ -27,7 +26,6 @@
   },
   "devDependencies": {
     "@types/d3": "^7.4.0",
-    "@types/d3-cloud": "^1.2.5",
     "@types/node": "^18.11.9",
     "@types/plotly.js-basic-dist": "^1.54.1",
     "@vitejs/plugin-vue": "^3.2.0",
