@@ -1,5 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoadVue from '../pages/Load/Load.vue'
+import General from '../pages/Analytics/General/General.vue'
+import WordTraking from '../pages/Analytics/WordTraking.vue'
+import Words from '../pages/Analytics/Words/Words.vue'
+import Vocabulary from '../pages/Analytics/Vocabulary.vue'
+import Messages from '../pages/Analytics/Messages.vue'
+import Chats from '../pages/Analytics/Chats.vue'
+import ReplayTime from '../pages/Analytics/ReplayTime.vue'
+
+
 
 const routes = [
   {
@@ -8,37 +17,37 @@ const routes = [
   },
   {
     path: '/analytics',
-    component: import('../pages/Analytics/General/General.vue'),
+    component: General,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Общие', layoutTitleOrder: 10 }
   },
   {
     path: '/analytics/word-traking',
-    component: import('../pages/Analytics/WordTraking.vue'),
+    component: WordTraking,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Остлеживание слова', layoutTitleOrder: 20 }
   },
   {
     path: '/analytics/words',
-    component: import('../pages/Analytics/Words/Words.vue'),
+    component: Words,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Слова', layoutTitleOrder: 30 }
   },
   {
     path: '/analytics/vocabulary',
-    component: import('../pages/Analytics/Vocabulary.vue'),
+    component: Vocabulary,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Словарный запас', layoutTitleOrder: 40 }
   },
   {
     path: '/analytics/messages',
-    component: import('../pages/Analytics/Messages.vue'),
+    component: Messages,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Сообщения', layoutTitleOrder: 50 }
   },
   {
     path: '/analytics/chats',
-    component: import('../pages/Analytics/Chats.vue'),
+    component: Chats,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Собеседники', layoutTitleOrder: 60 }
   },
   {
     path: '/analytics/replay-time',
-    component: import('../pages/Analytics/ReplayTime.vue'),
+    component: ReplayTime,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Вермя ответа', layoutTitleOrder: 70 }
   },
 ]
