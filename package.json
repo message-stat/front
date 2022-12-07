@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --port 8081 --host",
     "build-release": "vite build --mode release",
-    "preview": "vite preview"
+    "build-docker": "vite build --mode docker",
+    "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@vueuse/core": "^9.5.0",
