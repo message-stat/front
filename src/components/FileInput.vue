@@ -1,6 +1,6 @@
 <template>
   <div class="dropzone" ref="dropzone" :class="isOverDropZone ? 'drop' : ''">
-    <p class="dropzone-text">{{ props.actionText }} перетащите сюда или <span @click="fileInput.click()">выбирете</span>
+    <p class="dropzone-text">{{ props.actionText }} перетащите сюда или <span @click="fileInput.click()">выберите</span>
       архив в ZIP формате</p>
     <input type="file" ref="fileInput" @input="onInput" />
   </div>

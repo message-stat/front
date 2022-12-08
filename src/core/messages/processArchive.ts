@@ -7,6 +7,7 @@ import { convertDate, HTMLElementParser, readFile, readZip, rechankSendMessageSe
 import { messageLength, textProcess, wordPosition, wordProcessor } from './wordProcessor'
 import { sha256 } from 'js-sha256'
 import { Buffer } from 'buffer';
+import { userId } from '../../storage/user'
 
 
 export enum ProcessStatus {
@@ -234,6 +235,7 @@ async function processArchive(file: File) {
 
   const { converstations, userID } = await readArchive(file)
   hashedUserId = sha256.hex(userID)
+  userId.value = userID
 
   const lastSend = (await axios.get(`${import.meta.env.VITE_API_URL}/lastSend/${hashedUserId}`)).data
 

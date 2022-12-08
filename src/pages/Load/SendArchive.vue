@@ -9,7 +9,9 @@
     </div>
 
     <div class="process" v-if="processor.processStatus.value != ProcessStatus.notStarted">
-      <p class="warning">Идёт процесс выгрузки, не закрывайте страницу</p>
+      <p class="warning" v-if="(processor.processStatus.value == ProcessStatus.processing)">Идёт процесс выгрузки, не
+        закрывайте страницу</p>
+      <p class="success" v-if="(processor.processStatus.value == ProcessStatus.finished)">Процесс выгрузки завершен</p>
 
       <div>
         <p>Обработано диалогов: <span class="num">{{ processor.processedInfo.value.conerstationCount
@@ -103,6 +105,14 @@ function onReset() {
       font-weight: bold;
       color: #c79600;
       border-left: 4px solid #c79600;
+      padding-left: 5px;
+    }
+
+    &.success {
+      margin: 10px 0;
+      font-weight: bold;
+      color: #34C759FF;
+      border-left: 4px solid #34C759FF;
       padding-left: 5px;
     }
 

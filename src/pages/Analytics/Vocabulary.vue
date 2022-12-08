@@ -2,18 +2,36 @@
   <div>
     <div class="card">
       <h2>Параметры</h2>
-      <p>по корню</p>
-      <p>по лексеме</p>
-      <p>минимальное кол-во слов (использовалось больше 1 раза)</p>
+      <div class="desc">
+        Группировать по:
+        <select v-model="groupVariant">
+          <option value="word">слову</option>
+          <option value="lemma">инфинитиву</option>
+          <option value="stem">корню</option>
+        </select>
+      </div>
+
+      <div class="desc">
+        Минимальное количество раз использования слова:
+        <input type="number" min="0" max="1000" v-model="minWordCount">
+      </div>
     </div>
-    <Card :loading="loading" :elapsed="elapsed">
-      <h2>Гистограмма? использования слов</h2>
-      <VuePlotly class="chart" :data="data" :layout="layout" />
+    <Card :loading="chart1.loading.value" :elapsed="chart1.elapsed.value">
+      <h2>Словарный запас</h2>
+      <VuePlotly class="chart" :data="chart1.data.value" :layout="layout" />
     </Card>
-    <div class="card">
+
+    <Card :loading="loadingByTime" :elapsed="elapsedByTime">
       <h2>Словарный запас по времени</h2>
-      <p>процент использования</p>
-    </div>
+      <TimeSeriesChart url="/load/wordDistributionByTime" type="line" :data-processor="processor" :params="params"
+        ref="timeSeries" @update:elapsed="e => elapsedByTime = e" @update:loading="e => loadingByTime = e" />
+
+      <div class="desc slider">
+        <input type="range" id="volume" name="volume" min="5" max="100" v-model="percent">
+        <label for="volume">{{ percent }}% речи</label>
+      </div>
+
+    </Card>
   </div>
 
 </template>
@@ -22,13 +40,30 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { Data } from 'plotly.js-basic-dist';
-import { ref, watchEffect } from 'vue';
+import { computed, ref, watch, watchEffect } from 'vue';
 import Card from '../../components/Card.vue';
 import VuePlotly from '../../components/VuePlotly.vue';
 import { serverColor, userColor } from '../../constants';
-import { lineLayout, LoadChartResult } from '../../core/analytics/defaultChart';
+import { groupBy, lineLayout, LoadChartResult } from '../../core/analytics/defaultChart';
 import { userIdHash } from '../../storage/user';
+import { refDebounced, watchDebounced } from '@vueuse/core'
+import { useChartLoader } from './useLoader';
+import {
+  ma, dma, ema, sma, wma
+} from 'moving-averages'
+import TimeSeriesChart from '../../components/TimeSeriesChart.vue';
 
+
+
+const groupVariant = ref<'word' | 'lemma' | 'stem'>('stem');
+const minWordCount = ref<string>('0');
+const percent = ref(70);
+const minWordCountDebounced = refDebounced(minWordCount, 700);
+
+const timeSeries = ref<InstanceType<typeof TimeSeriesChart> | null>(null);
+
+const loadingByTime = ref(false);
+const elapsedByTime = ref(0);
 
 const layout: typeof lineLayout = {
   ...lineLayout,
@@ -39,42 +74,77 @@ const layout: typeof lineLayout = {
   }
 }
 
-const data = ref<Data[]>([])
-const loading = ref(true);
-const elapsed = ref(0);
+const params = computed(() => {
+  return {
+    userId: userIdHash.value,
+    minWordCount: Number.parseInt(minWordCountDebounced.value) ?? 0,
+    groupVariant: groupVariant.value,
+  }
+})
 
-watchEffect(async () => {
-  loading.value = true;
-  const res = await axios.get(`${import.meta.env.VITE_API_URL}/load/wordDistribution`, { params: { userId: userIdHash.value } })
+const chart1 = useChartLoader({
+  url: 'wordDistribution',
+  params,
+  process: (r) => ({
+    x: r.map(t => t.x),
+    y: r.map(t => t.y).reduce((a, b) => {
+      a.length === 0 ? a.push(b) : a.push(a[a.length - 1] + b)
+      return a
+    }, [])
+  }),
+  userAddition: {
+    name: 'Вы',
+    line: { color: userColor, shape: 'spline' }
+  },
+  serverAddition: {
+    name: 'Общий',
+    line: { color: serverColor, shape: 'spline' }
+  },
+  autoReload: false,
+})
 
-  const { server, user } = res.data as LoadChartResult
+watch(userIdHash, () => {
+  chart1.load()
+}, { immediate: true })
 
-  data.value = [
-    {
-      x: server.map(t => t.x),
-      y: server.map(t => t.y).reduce((a, b) => {
-        a.length === 0 ? a.push(b) : a.push(a[a.length - 1] + b)
-        return a
-      }, []),
-      name: 'Общий',
-      line: { color: serverColor, shape: 'spline' }
-    }]
 
+watchDebounced([minWordCount, groupVariant], () => {
+  chart1.load()
+}, { debounce: 700, maxWait: 10000 })
+
+
+watch(percent, (v) => {
+  timeSeries.value.reprocessData()
+})
+
+function processor(data: LoadChartResult): Partial<Data>[] {
+  const server = data.server as any as { x: number, y: string, date: string }[]
+  const grouped = groupBy(server, (t) => `${t.x}`)
+  const number = `${percent.value}`
+
+  if (!grouped[number]) return []
+
+  const res = [{
+    x: grouped[number].map(t => t.date),
+    y: ma(grouped[number].map(t => Number.parseInt(t.y)), 5),
+    name: 'Сервер',
+    line: { shape: 'spline', color: serverColor }
+  }]
+
+  const user = data.user as any as { x: number, y: string, date: string }[]
   if (user) {
-    data.value.push({
-      x: user.map(t => t.x),
-      y: user.map(t => t.y).reduce((a, b) => {
-        a.length === 0 ? a.push(b) : a.push(a[a.length - 1] + b)
-        return a
-      }, []),
+    const grouped = groupBy(user, (t) => `${t.x}`)
+    if (!grouped[number]) return res
+    res.push({
+      x: grouped[number].map(t => t.date),
+      y: ma(grouped[number].map(t => Number.parseInt(t.y)), 5),
       name: 'Вы',
-      line: { color: userColor, shape: 'spline' }
+      line: { shape: 'spline', color: userColor }
     })
   }
 
-  loading.value = false;
-  elapsed.value = res.data.elapsed;
-})
+  return res
+}
 
 
 </script>
@@ -84,6 +154,18 @@ watchEffect(async () => {
 .card {
   .chart {
     margin: 10px;
+  }
+}
+
+.slider {
+  display: flex;
+
+  input {
+    flex: 1;
+  }
+
+  label {
+    min-width: 80px;
   }
 }
 </style>

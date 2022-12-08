@@ -7,7 +7,7 @@
 import VuePlotly from '@/components/VuePlotly.vue'
 import { computed } from '@vue/reactivity';
 import axios from 'axios';
-import { Data, Layout } from 'plotly.js';
+import { AxisType, Data, Layout } from 'plotly.js';
 import { onMounted, ref, watch, watchEffect } from 'vue';
 import { serverColor, userColor } from '../constants';
 import { LoadChartResult } from '../core/analytics/defaultChart';
@@ -16,7 +16,9 @@ import { userIdHash } from '../storage/user';
 const props = defineProps<{
   url: string;
   type: 'bar' | 'line';
+  dataProcessor?: (data: LoadChartResult) => Data[];
   params?: any;
+  yaxis?: AxisType;
 }>()
 
 const emit = defineEmits<{
@@ -44,7 +46,7 @@ const layout = ref<Partial<Layout>>({
   },
   yaxis: {
     autorange: true,
-    type: 'linear'
+    type: props.yaxis || 'linear'
   }
 })
 
@@ -65,12 +67,22 @@ watchEffect(async () => {
   load()
 })
 
+let loadedData: LoadChartResult = null
+
 async function load() {
   emit('update:loading', true)
 
   const res = await axios.get(`${import.meta.env.VITE_API_URL}${props.url}`, { params: { userId: userIdHash.value, ...props.params } })
-  const { server, user } = res.data as LoadChartResult
-  console.log(res);
+  loadedData = res.data as LoadChartResult
+
+  if (props.dataProcessor) {
+    data.value = props.dataProcessor(loadedData)
+    emit('update:elapsed', res.data.elapsed)
+    emit('update:loading', false)
+    return
+  }
+
+  const { server, user } = loadedData
 
   data.value = [{
     x: server.map(t => t.x),
@@ -95,6 +107,16 @@ async function load() {
   emit('update:elapsed', res.data.elapsed)
   emit('update:loading', false)
 }
+
+function reprocessData() {
+  if (props.dataProcessor) {
+    data.value = props.dataProcessor(loadedData)
+  }
+}
+
+defineExpose({
+  reprocessData
+})
 
 </script>
 
