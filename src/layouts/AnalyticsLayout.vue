@@ -2,7 +2,8 @@
   <div class="wrapper">
     <div class="sidebar">
       <div class="sidebar-content">
-        <RouterLink v-for="link in links" :to="link.to" :class="route.path == link.to ? 'active' : ''">{{ link.title }}
+        <RouterLink v-for="link in links" :to="link.to"
+          :class="route.path == link.to || (link.name && route.name == link.name) ? 'active' : ''">{{ link.title }}
         </RouterLink>
       </div>
     </div>
@@ -20,9 +21,13 @@ const route = useRoute()
 const router = useRouter()
 
 const links = router.getRoutes()
+  .filter(t => !t.aliasOf)
   .filter(route => route.meta?.layout === 'AnalyticsLayout' && route.meta?.layoutTitle)
   .sort((a, b) => (a.meta.layoutTitleOrder as number ?? 0) - (b.meta.layoutTitleOrder as number ?? 0))
-  .map(route => ({ to: route.path, title: route.meta.layoutTitle }))
+  .map(route => ({ to: route.path, title: route.meta.layoutTitle, name: route.name }))
+
+console.log(links);
+
 
 </script>
 

@@ -121,7 +121,5 @@ defineExpose({
 </script>
 
 <style scoped>
-.chart {
-  /* margin: 10px; */
-}
+
 </style>

@@ -22,6 +22,8 @@ const routes = [
   },
   {
     path: '/analytics/word-traking',
+    alias: '/analytics/word-traking/:word',
+    name: 'word-traking',
     component: WordTraking,
     meta: { layout: 'AnalyticsLayout', layoutTitle: 'Остлеживание слова', layoutTitleOrder: 20 }
   },
