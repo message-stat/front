@@ -29,7 +29,7 @@ const emit = defineEmits<{
 const layout = ref<Partial<Layout>>({
   height: 500,
   margin: { t: 20, b: 10, l: 40, r: 10 },
-  barmode: 'overlay',
+  barmode: 'group',
   legend: {
     orientation: 'h',
     yanchor: 'bottom',

@@ -23,15 +23,9 @@ export const lineLayout: Partial<Layout> = {
   }
 }
 
-export declare type LoadChartResult = {
-  server: {
-    x: number
-    y: number
-  }[],
-  user?: {
-    x: number
-    y: number
-  }[],
+export declare type LoadChartResult<T = { x: number, y: number }> = {
+  server: T[],
+  user?: T[],
   elapsed: number,
 }
 

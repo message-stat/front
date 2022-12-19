@@ -18,37 +18,47 @@
       <button class="btn" @click="update">Обновить</button>
     </div>
 
-    <Card>
+    <Card :elapsed="elapsedByTime" :loading="loadingByTime">
       <h2>Количество слов по времени</h2>
 
-      <!-- <div class="desc">
+      <div class="desc">
         Масштаб:
         <select v-model="scale">
           <option value="absolute">абсолютный</option>
           <option value="relative">относительный</option>
         </select>
-      </div> -->
-      <TimeSeriesChart url="/load/wordTrakingByTime" type="line" :params="params"
+        <p v-if="scale == 'absolute'" class="desc">Абсолютный масштаб графика отображает истенное количетсво слов,
+          однако, может ввести Вас в заблуждение, так как частота использования слов зависит от объёма общения. Если Вы
+          стали меньше общаться, то и абсолютное количетсво использования слова уменьшится</p>
+      </div>
+      <TimeSeriesChart url="/load/wordTrakingByTime" type="line" :params="params" :data-processor="processor"
         @update:elapsed="e => elapsedByTime = e" @update:loading="e => loadingByTime = e" />
+
     </Card>
 
-
-    <!-- <div class="card">
-      <h2>Количество слов по времени</h2>
-    </div>
-    <div class="card">
+    <Card :elapsed="elapsedByTime" :loading="loadingByTime">
       <h2>Позиция слова</h2>
-      <p>Круговая диаграмма расположения слова</p>
-    </div> -->
+      <VuePlotly class="chart" :data="pieWordPosition.data.value" :layout="pieLayout" />
+    </Card>
   </div>
 </template>
 
 
 <script setup lang="ts">
+import { Data, Layout } from 'plotly.js';
 import { computed, ref, watch, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Card from '../../components/Card.vue';
 import TimeSeriesChart from '../../components/TimeSeriesChart.vue';
+import { serverColor, serverColors, userColor, userColors } from '../../constants';
+import { LoadChartResult } from '../../core/analytics/defaultChart';
+import {
+  ma, dma, ema, sma, wma
+} from 'moving-averages'
+import VuePlotly from '../../components/VuePlotly.vue';
+import { useChartLoader } from './useLoader';
+import { userIdHash } from '../../storage/user';
+import { tree } from 'd3-hierarchy';
 
 const elapsedByTime = ref(0);
 const loadingByTime = ref(false);
@@ -66,6 +76,31 @@ const params = ref({
   scale: scale.value
 })
 
+const pieWordPosition = useChartLoader<{ name: string, count: number }>({
+  url: 'pieWordPosition',
+  params: computed(() => ({ ...params.value, userId: userIdHash.value })),
+  process: (r, isUser) => ({
+    labels: r.map(t => t.name),
+    values: r.map(t => t.count),
+    type: 'pie',
+    marker: { colors: isUser ? userColors.slice(0, r.length) : serverColors.slice(0, r.length) },
+  }),
+  userAddition: {
+    name: 'Вы',
+    domain: { column: 1 },
+  },
+  serverAddition: {
+    name: 'Общий',
+    domain: { column: 0 },
+  },
+  autoReload: true,
+})
+
+const pieLayout: Partial<Layout> = {
+  height: 500,
+  grid: { rows: 1, columns: 2 }
+};
+
 
 watch(serachWord, (val) => {
   if (val)
@@ -80,6 +115,33 @@ function update() {
     group: groupVariant.value,
     scale: scale.value
   }
+}
+
+watch(scale, update)
+
+
+function processor(data: LoadChartResult): Partial<Data>[] {
+  const server = data.server as any as { x: string, y: number }[]
+
+  const res = [{
+    x: server.map(t => t.x),
+    y: ma(server.map(t => t.y), 5),
+    name: 'Сервер',
+    line: { shape: 'spline', color: serverColor }
+  }]
+
+  const user = data.user as any as { x: string, y: number }[]
+  if (user) {
+
+    res.push({
+      x: user.map(t => t.x),
+      y: ma(user.map(t => t.y), 5),
+      name: 'Вы',
+      line: { shape: 'spline', color: userColor }
+    })
+  }
+
+  return res
 }
 
 

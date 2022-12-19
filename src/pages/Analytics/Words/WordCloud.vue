@@ -13,12 +13,16 @@
         <option value="user">Вас</option>
       </select>
     </div>
+    <div class="desc">
+      <label for="scales">Исключить предлоги и союзы:</label>
+      <input type="checkbox" id="scales" name="scales" v-model="article">
+    </div>
   </Card>
 </template>
 
 <script setup lang="ts">
 
-import { onMounted, ref, shallowRef, watchEffect } from 'vue';
+import { onMounted, ref, shallowRef, watchEffect, watch } from 'vue';
 import Card from '../../../components/Card.vue';
 import * as d3 from "d3";
 import Cloud from 'd3-cloud';
@@ -31,6 +35,7 @@ const elapsed = ref(0);
 const container = ref<HTMLElement>();
 
 const variant = ref<'server' | 'user'>('server');
+const article = ref(true);
 
 const wordsResult = shallowRef()
 
@@ -84,18 +89,29 @@ const onResize = useDebounceFn((w) => {
 
 watchEffect(() => onResize(width.value))
 
-watchEffect(async () => {
-  loading.value = true
-  const res = await axios.get(`${import.meta.env.VITE_API_URL}/load/topWords`, { params: { userId: variant.value == 'user' ? userIdHash.value : undefined } })
-  const { words } = res.data
+watch(() => ({
+  variant: variant.value,
+  userIdHash: userIdHash.value,
+  article: article.value
+}), async (val) => {
 
-  // layout.words(words.map(d => ({ text: d.x, size: Math.log(d.y * 200) * 50 })))
-  layout.words(words.map(d => ({ text: d.x, size: d.y * 2000 })))
+  loading.value = true
+  const res = await axios.get(`${import.meta.env.VITE_API_URL}/load/topWords`, {
+    params: {
+      userId: val.variant == 'user' ? val.userIdHash : undefined,
+      article: !val.article
+    }
+  })
+  const words = res.data.words as { x: string, y: number }[]
+
+  layout.words(words
+    .map(d => ({ text: d.x, size: d.y * 4000 })))
   layout.size([width.value, 600])
   layout.start();
 
   elapsed.value = res.data.elapsed
-
+}, {
+  immediate: true
 })
 
 

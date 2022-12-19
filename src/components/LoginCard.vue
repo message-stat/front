@@ -14,9 +14,9 @@
             :style="{ visibility: isFileOpen ? 'hidden' : '' }" />
         </div>
         <br>
-        <p><b>ИЛИ</b></p>
+        <!-- <p><b>ИЛИ</b></p>
         <br>
-        <button class="btn vk">Авторизуйтесь через VK</button>
+        <button class="btn vk">Авторизуйтесь через VK</button> -->
       </div>
     </div>
   </Teleport>

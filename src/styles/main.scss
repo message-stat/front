@@ -52,6 +52,10 @@ body {
 
   .desc {
     margin: 10px 0;
+
+    input[type='checkbox'] {
+      vertical-align: middle;
+    }
   }
 }
 

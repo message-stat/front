@@ -87,10 +87,7 @@ const chart1 = useChartLoader({
   params,
   process: (r) => ({
     x: r.map(t => t.x),
-    y: r.map(t => t.y).reduce((a, b) => {
-      a.length === 0 ? a.push(b) : a.push(a[a.length - 1] + b)
-      return a
-    }, [])
+    y: r.map(t => t.y)
   }),
   userAddition: {
     name: 'Вы',
@@ -127,7 +124,7 @@ function processor(data: LoadChartResult): Partial<Data>[] {
   const res = [{
     x: grouped[number].map(t => t.date),
     y: ma(grouped[number].map(t => Number.parseInt(t.y)), 5),
-    name: 'Сервер',
+    name: 'Общий',
     line: { shape: 'spline', color: serverColor }
   }]
 

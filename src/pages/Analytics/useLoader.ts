@@ -3,10 +3,10 @@ import { Data } from "plotly.js-basic-dist";
 import { ComputedRef, ref, Ref, shallowRef, watch, watchEffect } from "vue";
 import { LoadChartResult } from "../../core/analytics/defaultChart";
 
-export function useChartLoader(params: {
+export function useChartLoader<T = { x: number, y: number }>(params: {
   url: string;
   params: Ref<any>;
-  process: (result: { x: number, y: number }[]) => { x: number[], y: number[] };
+  process: (result: T[], isUser: boolean) => Partial<Data>;
   userAddition?: Partial<Data>;
   serverAddition?: Partial<Data>;
   autoReload?: boolean;
@@ -32,17 +32,17 @@ export function useChartLoader(params: {
       }
     })
 
-    const { server, user } = res.data as LoadChartResult
+    const { server, user } = res.data as LoadChartResult<T>
 
 
     data.value = [{
-      ...params.process(server),
+      ...params.process(server, false),
       ...params.serverAddition as any,
     }]
 
     if (user) {
       data.value.push({
-        ...params.process(user),
+        ...params.process(user, true),
         ...params.userAddition as any,
       })
     }
