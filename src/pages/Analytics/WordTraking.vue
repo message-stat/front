@@ -2,6 +2,8 @@
   <div>
     <div class="card">
       <h2>Параметры</h2>
+
+      <p v-if="!(serachWord && serachWord != '')" class="warning">Введите слово</p>
       <div class="desc">
         Слово:
         <input type="text" v-model="serachWord">
@@ -18,28 +20,33 @@
       <button class="btn" @click="update">Обновить</button>
     </div>
 
-    <Card :elapsed="elapsedByTime" :loading="loadingByTime">
-      <h2>Количество слов по времени</h2>
+    <div v-if="serachWord && serachWord != ''">
+      <Card :elapsed="elapsedByTime" :loading="loadingByTime">
+        <h2>Количество слов по времени</h2>
 
-      <div class="desc">
-        Масштаб:
-        <select v-model="scale">
-          <option value="absolute">абсолютный</option>
-          <option value="relative">относительный</option>
-        </select>
-        <p v-if="scale == 'absolute'" class="desc">Абсолютный масштаб графика отображает истенное количетсво слов,
-          однако, может ввести Вас в заблуждение, так как частота использования слов зависит от объёма общения. Если Вы
-          стали меньше общаться, то и абсолютное количетсво использования слова уменьшится</p>
-      </div>
-      <TimeSeriesChart url="/load/wordTrakingByTime" type="line" :params="params" :data-processor="processor"
-        @update:elapsed="e => elapsedByTime = e" @update:loading="e => loadingByTime = e" />
+        <div class="desc">
+          Масштаб:
+          <select v-model="scale">
+            <option value="absolute">абсолютный</option>
+            <option value="relative">относительный</option>
+          </select>
+          <p v-if="scale == 'absolute'" class="desc">Абсолютный масштаб графика отображает истенное количетсво слов,
+            однако, может ввести Вас в заблуждение, так как частота использования слов зависит от объёма общения. Если
+            Вы
+            стали меньше общаться, то и абсолютное количетсво использования слова уменьшится</p>
+        </div>
+        <TimeSeriesChart url="/load/wordTrakingByTime" type="line" :params="params" :data-processor="processor"
+          @update:elapsed="e => elapsedByTime = e" @update:loading="e => loadingByTime = e" />
 
-    </Card>
+      </Card>
 
-    <Card :elapsed="elapsedByTime" :loading="loadingByTime">
-      <h2>Позиция слова</h2>
-      <VuePlotly class="chart" :data="pieWordPosition.data.value" :layout="pieLayout" />
-    </Card>
+      <Card :elapsed="elapsedByTime" :loading="loadingByTime">
+        <h2>Позиция слова</h2>
+        <VuePlotly class="chart" :data="pieWordPosition.data.value" :layout="pieLayout" />
+      </Card>
+    </div>
+
+
   </div>
 </template>
 
@@ -154,5 +161,13 @@ function processor(data: LoadChartResult): Partial<Data>[] {
   .chart {
     margin: 10px;
   }
+}
+
+p.warning {
+  margin: 10px 0;
+  font-weight: bold;
+  color: #c79600;
+  border-left: 4px solid #c79600;
+  padding-left: 5px;
 }
 </style>
